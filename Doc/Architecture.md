@@ -123,16 +123,30 @@ This document breaks down the technical architecture, data flows, and code struc
                 *   A rich text caption area containing the Groq `ai_explanation`.
 
 ### 5.3 Data Flow Summary
-1.  User enters preferences -> Frontend sends `POST http://127.0.0.1:8000/api/recommend`.
+1.  User enters preferences -> Next.js Frontend sends `POST https://<your-streamlit-backend-url>/api/recommend`.
 2.  Next.js receives JSON array containing ratings and AI explanations.
 3.  `RecommendationGrid` dynamically maps the response payload into the beautiful `ImageCard` styling.
 
 ---
 
-## Open Questions For Proceeding
+## Phase 6: Deployment Strategy
+
+**Objective:** Host the frontend on Vercel for global edge availability and Host the Python API backend on Streamlit Community Cloud.
 
 > [!WARNING]
-> To actually begin writing the code for this architecture, I still need slightly more direction on:
-> 1. Do you want to build a **Streamlit** app (fast, Python only) OR a **Next.js/React** web app (premium UI)?
-> 2. ~~Which **LLM provider/API** should we integrate?~~ *Confirmed: Groq LLM.* 
-> 3. Does this detailed architecture look good to you?
+> **Important Note on Streamlit Backend:** Streamlit Cloud is primarily designed for hosting Stremlit UI applications, not standalone FastAPI backend services. To deploy FastAPI on Streamlit Cloud, we will use a workaround wrapper script (e.g., `streamlit_app.py`) that acts as an entry point to launch the local `uvicorn` FastAPI server, or we will pivot to Render/Railway if the workaround proves too restrictive regarding exposed ports.
+
+### 6.1 Frontend Deployment (Vercel)
+*   **Platform:** Vercel (Native Next.js support)
+*   **Configuration:** The `phase5-frontend` directory will be connected directly to Vercel. Vercel will automatically detect the Next.js framework, install dependencies (`npm install`), and build the output (`npm run build`).
+*   **Environment Variables:** 
+    *   `NEXT_PUBLIC_BACKEND_URL`: Set to the deployed Streamlit Backend URL.
+
+### 6.2 Backend Deployment (Streamlit Cloud)
+*   **Platform:** Streamlit Community Cloud
+*   **Configuration:** 
+    *   A custom `streamlit_app.py` root file will be created to serve as the entry point for the Streamlit cloud environment, spinning up a subprocess for the FastAPI backend or providing a basic UI that also answers API routes.
+    *   The `requirements.txt` will contain all necessary dependencies including `fastapi`, `uvicorn`, `sqlalchemy`, and `groq`.
+*   **CORS Configuration:** The FastAPI app will be updated with `CORSMiddleware` to allow cross-origin requests specifically from the Vercel frontend domain.
+*   **Environment Variables:**
+    *   `GROQ_API_KEY`: Stored securely in Streamlit Secrets.
