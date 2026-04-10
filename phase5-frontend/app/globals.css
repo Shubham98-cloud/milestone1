@@ -1,0 +1,238 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --primary-red: #e23744;
+  --nav-dark: #22252a;
+  --bg-light: #ffffff;
+  --text-dark: #121212;
+  --text-light: #ffffff;
+  --text-gray: #888888;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg-light);
+  color: var(--text-dark);
+  height: 100vh;
+  overflow: hidden;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.app-container {
+  display: flex;
+  width: 100%;
+  height: 100vh;
+}
+
+/* Sidebar Layers */
+.sidebar-container {
+  display: flex;
+  height: 100%;
+}
+
+.ai-layer {
+  background-color: var(--primary-red);
+  width: 250px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  position: relative;
+}
+
+.chat-bubble {
+  background-color: var(--nav-dark);
+  color: white;
+  padding: 30px 20px;
+  border-radius: 20px;
+  font-size: 1.15rem;
+  font-weight: 500;
+  line-height: 1.5;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  position: relative;
+  z-index: 5;
+}
+
+.chat-bubble::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: -15px;
+  transform: translateY(-50%);
+  border-width: 15px 0 15px 15px;
+  border-style: solid;
+  border-color: transparent transparent transparent var(--nav-dark);
+  display: block;
+  width: 0;
+}
+
+.nav-layer {
+  background-color: var(--nav-dark);
+  width: 200px;
+  border-radius: 25px 0 0 25px;
+  margin-left: -25px; /* Overlap the red area */
+  z-index: 10;
+  padding: 40px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+}
+
+.logo-text {
+  color: white;
+  font-size: 2rem;
+  font-weight: 800;
+  font-style: italic;
+  letter-spacing: -1px;
+}
+
+.nav-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.nav-item {
+  color: #aaaaaa;
+  font-weight: 500;
+  font-size: 1.05rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: color 0.2s;
+}
+
+.nav-item.active, .nav-item:hover {
+  color: white;
+}
+
+/* Main Content area */
+.main-area {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: #f9f9f9;
+}
+
+.top-bar {
+  padding: 20px 40px;
+  background: white;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.search-input, .settings-select {
+  padding: 12px 20px;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-family: inherit;
+  outline: none;
+}
+.search-input { flex-grow: 1; max-width: 500px; background: #fdfdfd;}
+.search-input:focus { border-color: var(--primary-red); }
+
+.filter-bar {
+  display: flex;
+  padding: 20px 40px;
+  gap: 15px;
+  background: white;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+  flex-wrap: wrap;
+}
+
+.submit-btn {
+  background-color: var(--primary-red);
+  color: white;
+  font-weight: bold;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+.submit-btn:hover { background-color: #c1222e; }
+.submit-btn:active { transform: scale(0.98); }
+
+.content-inner {
+  padding: 40px;
+  overflow-y: auto;
+  flex-grow: 1;
+}
+
+.results-grid {
+  display: flex;
+  gap: 25px;
+  flex-wrap: wrap;
+}
+
+/* Card Styling */
+.food-card {
+  width: 320px;
+  background: white;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
+}
+
+.card-image-wrap {
+  position: relative;
+  height: 280px;
+  width: 100%;
+}
+
+.card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.card-gradient {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+  padding: 20px;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  height: 60%;
+}
+
+.card-match {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: var(--primary-red);
+  color: white;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.card-caption {
+  padding: 20px;
+  color: #333;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  background: white;
+}
