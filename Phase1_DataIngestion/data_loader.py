@@ -45,7 +45,12 @@ def transform_data(df):
     return final_df
 
 # 3. Storage: Save data to SQLite Local Database
-def load_data_to_db(df, db_path='sqlite:///restaurants.db'):
+def load_data_to_db(df, db_path=None):
+    if db_path is None:
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        db_path = f"sqlite={base_dir}/restaurants.db"
+        # Fix sqlite url formatting
+        db_path = f"sqlite:///{os.path.join(base_dir, 'restaurants.db')}"
     print(f"Loading data into {db_path}...")
     engine = create_engine(db_path)
     
