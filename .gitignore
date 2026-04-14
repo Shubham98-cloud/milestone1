@@ -7,3 +7,4 @@ venv/
 .DS_Store
 *.db
 !data/*.db
+!Phase1_DataIngestion/restaurants.db
