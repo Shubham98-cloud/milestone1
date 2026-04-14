@@ -2,48 +2,74 @@ import streamlit as st
 import subprocess
 import time
 import requests
-import os
 import sys
+import os
+from pyngrok import ngrok
 
-st.set_page_config(page_title="Zomato API Backend", page_icon="🚀")
+st.set_page_config(page_title="Zomato API Tunneled Backend", page_icon="🔗")
 
-st.title("FastAPI Backend Wrapper")
-st.write("This Streamlit app acts as a launcher for the true FastAPI backend on Streamlit Community Cloud.")
+st.title("Zomato API Tunneled Backend")
+st.write("This Streamlit app launches the FastAPI backend and uses Ngrok to tunnel it to the internet so your Next.js application can access it.")
 
+# Authenticate Ngrok if provided in secrets/environment
+ngrok_auth = os.environ.get("NGROK_AUTHTOKEN")
+if ngrok_auth:
+    try:
+        ngrok.set_auth_token(ngrok_auth)
+    except Exception as e:
+        st.warning(f"Error setting Ngrok Auth Token: {e}")
+else:
+    st.warning("⚠️ No `NGROK_AUTHTOKEN` found in environment. Ngrok might expire sessions or fail. Set this token in Streamlit Secrets!")
+
+# Initialize Data if DB is missing (Streamlit Cloud runs fresh containers)
+db_path = os.path.join(os.getcwd(), 'Phase1_DataIngestion', 'restaurants.db')
+if not os.path.exists(db_path):
+    st.info("Generating initial SQLite Database, this might take a moment...")
+    try:
+        # Run Data loader synchronously to make sure the db is there
+        subprocess.run([sys.executable, "Phase1_DataIngestion/data_loader.py"], check=True)
+        st.success("Database regenerated successfully.")
+    except subprocess.CalledProcessError as e:
+        st.error(f"Failed to load dataset: {e}")
+
+# Launch FastAPI using a persistent connection
 if 'fastapi_process' not in st.session_state:
-    st.info("Starting FastAPI server via subprocess...")
-    
-    # Ensure the current directory is in PYTHONPATH so Phase2_BackendAPI can be resolved
+    st.info("Starting up FastAPI Server on internal port 8000...")
     env = os.environ.copy()
     env["PYTHONPATH"] = os.getcwd()
     
-    # Run uvicorn on port 8000
     process = subprocess.Popen(
         [sys.executable, "-m", "uvicorn", "Phase2_BackendAPI.main:app", "--host", "0.0.0.0", "--port", "8000"],
         env=env
     )
     st.session_state.fastapi_process = process
-    
-    # Wait for the server to spin up
     time.sleep(3)
 
-st.success("FastAPI server should be running on the internal port 8000!")
+# Setup Ngrok Tunnel
+if 'tunnel_url' not in st.session_state:
+    st.info("Creating Ngrok Public Tunnel...")
+    try:
+        # Open a tunnel on port 8000
+        http_tunnel = ngrok.connect(8000)
+        st.session_state.tunnel_url = http_tunnel.public_url
+    except Exception as e:
+        st.error(f"Failed to create tunnel: {e}")
 
-st.markdown("### API Health Check")
-try:
-    # Try fetching from the locally running FastAPI
-    response = requests.get("http://localhost:8000/api/metadata", timeout=5)
-    if response.status_code == 200:
-        st.success("✅ FastAPI is responding to requests!")
-        st.json(response.json())
-    else:
-        st.warning(f"⚠️ FastAPI responded with status code: {response.status_code}")
-except Exception as e:
-    st.error(f"❌ Failed to reach FastAPI server: {e}")
-
-st.markdown("""
----
-> **Important Note:** While Streamlit Cloud handles this `streamlit_app.py` script on exposed ports (like 80/443 mapping to 8501), the internal port `8000` where FastAPI runs **might not be directly exposed to the Internet**. 
-> 
-> If your Next.js application on Vercel cannot reach `http://<your-streamlit-url>:8000`, Streamlit Community Cloud's infrastructure is blocking external access to secondary ports. In that case, you will need to pivot your backend deployment to **Render** or **Railway**.
-""")
+if 'tunnel_url' in st.session_state:
+    st.success("✅ Your Backend is Live!")
+    public_url = st.session_state.tunnel_url
+    
+    st.markdown("### Next.js Vercel Configuration")
+    st.write("Copy the following URL into your Vercel Environment variables as `NEXT_PUBLIC_BACKEND_URL`:")
+    st.code(public_url, language="bash")
+    
+    st.markdown("### Test the public API directly via Ngrok:")
+    st.markdown(f"**[Click Here for MetaData Endpoint]({public_url}/api/metadata)**")
+    
+    st.write("---")
+    try:
+        res = requests.get("http://localhost:8000/api/metadata", timeout=5)
+        if res.status_code == 200:
+            st.write("Internal Status: Healthy ✔️")
+    except Exception as e:
+        st.error(f"Internal Health Fail: {e}")
