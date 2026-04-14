@@ -23,7 +23,8 @@ app.add_middleware(
 )
 
 # SQLite Database connection
-DB_PATH = '../Phase1_DataIngestion/restaurants.db'
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DB_PATH = os.path.join(BASE_DIR, 'Phase1_DataIngestion', 'restaurants.db')
 
 @contextmanager
 def get_db_connection():
