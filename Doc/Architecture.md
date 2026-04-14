@@ -123,7 +123,7 @@ This document breaks down the technical architecture, data flows, and code struc
                 *   A rich text caption area containing the Groq `ai_explanation`.
 
 ### 5.3 Data Flow Summary
-1.  User enters preferences -> Next.js Frontend sends `POST https://<your-streamlit-backend-url>/api/recommend`.
+1.  User enters preferences -> Next.js Frontend sends `POST https://<your-render-backend-url>/api/recommend`.
 2.  Next.js receives JSON array containing ratings and AI explanations.
 3.  `RecommendationGrid` dynamically maps the response payload into the beautiful `ImageCard` styling.
 
@@ -131,24 +131,22 @@ This document breaks down the technical architecture, data flows, and code struc
 
 ## Phase 6: Deployment Architecture
 
-**Objective:** Deploy the full-stack application by hosting the backend on Streamlit and the frontend on Vercel.
-
-> [!WARNING]
-> **Important Note on Streamlit Backend:** Streamlit Cloud is primarily designed for hosting Streamlit UI applications, not standalone FastAPI backend services. To deploy FastAPI on Streamlit Cloud, we will use a workaround wrapper script (e.g., `streamlit_app.py`) that acts as an entry point to launch the local `uvicorn` FastAPI server.
+**Objective:** Deploy the full-stack application by hosting the backend on Render.com and the frontend on Vercel.
 
 ### 6.1 Frontend Deployment (Vercel)
-*   **Platform:** Vercel
+*   **Platform:** Vercel (Native Next.js support)
 *   **Target:** The `phase5-frontend` Next.js application.
 *   **Configuration:** Vercel will automatically detect the Next.js framework, install dependencies (`npm install`), and build the production output (`npm run build`).
 *   **Environment Variables:** 
-    *   `NEXT_PUBLIC_BACKEND_URL`: Set to the deployed Streamlit Backend URL.
+    *   `NEXT_PUBLIC_BACKEND_URL`: Set to the deployed Render Backend URL.
 
-### 6.2 Backend Deployment (Streamlit)
-*   **Platform:** Streamlit Community Cloud
+### 6.2 Backend Deployment (Render.com)
+*   **Platform:** Render Web Service
 *   **Target:** The Phase 4 Python FastAPI backend and database engine.
 *   **Configuration:** 
-    *   A custom `streamlit_app.py` script will serve as the entry point, handling the launch of the FastAPI application.
-    *   Dependencies from `requirements.txt` (`fastapi`, `uvicorn`, `sqlalchemy`, `groq`) will be automatically installed.
-*   **CORS Configuration:** The backend will use `CORSMiddleware` to allow cross-origin requests securely from the Vercel frontend domain.
+    *   A `render.yaml` infrastructure-as-code file outlines the Web Service deployment.
+    *   **Build Command:** `pip install -r requirements.txt`
+    *   **Start Command:** `python Phase1_DataIngestion/data_loader.py && uvicorn Phase2_BackendAPI.main:app --host 0.0.0.0 --port $PORT` (Downloads dataset, stores in ephemeral SQLite, and launches FastAPI server).
+*   **CORS Configuration:** The FastAPI app will be updated with `CORSMiddleware` to allow cross-origin requests from the Vercel frontend domain.
 *   **Environment Variables:**
-    *   `GROQ_API_KEY`: Stored securely in Streamlit Secrets.
+    *   `GROQ_API_KEY`: Stored securely in Render's configuration dashboard.

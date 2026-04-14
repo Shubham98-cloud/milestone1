@@ -6,5 +6,3 @@ uvicorn
 python-dotenv
 groq
 httpx
-streamlit
-pyngrok
